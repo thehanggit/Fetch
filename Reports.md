@@ -2,8 +2,6 @@
 
 In this exercise, we aim to design and implement a data model that tracks user receipts and items with associated brand information. Our primary goal is to structure these tables and relationships so that data is clearly organized with logical representative of real-world usage. Beyond modeling, the exercise includes writing queries to answer specific business questions, evaluating data quality issues, and crafting a formal email to communicate our findings to a business leader.
 
-To achieve these objectives, I begin by loading JSON data into Snowflake using semi‐structured VARIANT columns, then create structured tables that mirror the JSON structure and extract the data into their final forms. With data in place, I write queries trying to address questions posted in the second task and summarize the data quality issues. Lastly, I craft a formal email to present the findings to a business leader, ensuring clear communication of both results and recommended actions.
-
 ## Task 1: Data Review
 This section summarizes my development to extract and normalize data from JSON file to final tables in Snowflake data warehouse, explore the relationship, and visualize them in a entity relationshi diagram (ERD). The details are shown by steps:
 
