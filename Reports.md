@@ -171,18 +171,18 @@ By exploration, there are 4 final tables that can be represented in an ERD shown
 ![image](https://github.com/user-attachments/assets/93f2c1d3-2897-409e-be27-8f06782a7861)
 
 ### Tables
-- **Users**: The primary key would be `user_id` which is renamed from `_id` for clarification.
-- **Receipts**: The primary key is `receipt_id`, which is renamed from `_id` for clafification. And there is foregin key `user_id` to link **Users** table.
-- **Receipt_items**: There is no primary key. The foregin key `barcode` links to **Brands** table and `receipt_id` links to **Receipts** table.
-- **Brands**: I choose `barcode` as primary key and `brand_id` as surrogate key.
+- **users**: The primary key would be `user_id` which is renamed from `_id` for clarification.
+- **receipts**: The primary key is `receipt_id`, which is renamed from `_id` for clafification. And there is foregin key `user_id` to link **Users** table.
+- **receipt_items**: There is no primary key. The foregin key `barcode` links to **brands** table and `receipt_id` links to **receipts** table.
+- **brands**: I choose `barcode` as primary key and `brand_id` as surrogate key.
 ### Relatioships
-- **Users** -> **Receipts**: one to many: One user can have many receipts and each receipt should belong to exactly one user.
-- **Receipts** -> **Receipt_item**: one to many: One receipt can contain many items and each receipt_item belongs to exactly one receipt.
-- **Brands** -> **Receipt_items**: one brand can appear in many items and each item belongs to one brand or may not have brand infomation.
+- **users** -> **receipts**: one to many: One user can have many receipts and each receipt should belong to exactly one user.
+- **receipts** -> **receipt_item**: one to many: One receipt can contain many items and each receipt_item belongs to exactly one receipt.
+- **brands** -> **receipt_items**: One brand can appear in many items and each item belongs to one brand or may not have brand infomation after investigation.
 
 ## Task 2: Resolve Proposed Questions
 ### I. What are the top 5 brands by receipts scanned for most recent month?
-To answer this question, I counted number of receipts for the same receipt_item using `barcode` and left join **Brands** for brand information. The query results are summarized in the table. It turns out that only two types of items are recorded in the recent month `2021-03`. And there is no brand information based on barcode from **Brands** table. Therefore, we manually check the description and found out the top 2 brands are: **Thindust** and **Mueller Austria**
+To answer this question, I counted number of receipts for the same receipt_item using `barcode` and left join **brands** for brand information. The query results are summarized in the table. It turns out that only two types of items are recorded in the recent month `2021-03`. And there is no brand information based on barcode from **brands** table. Therefore, we manually check the description and found out the top 2 brands are: **Thindust** and **Mueller Austria**
 | BARCODE | DESCRIPTION | BRAND_NAME  | NUMBER OF RECEIPTS_SCANNED |
 | ------- | ----------- | ----- | -------------------------- |
 |B07BRRLSVC | thindust summer face mask - sun protection neck gaiter for outdooractivities | NULL | 13 |
@@ -294,7 +294,7 @@ SELECT * from base_previous_month
 </details>
 
 ### III. When considering total number of items purchased from receipts with 'rewardsReceiptStatus’ of ‘Accepted’ or ‘Rejected’, which is greater?
-To answer this question, I averaged `total_spent` from **Receipts** based on `FINISHED` and `REJECTED` groups. Apparently, `ACeepcted` is greater.
+To answer this question, I averaged `total_spent` from **receipts** based on `FINISHED` and `REJECTED` groups. Apparently, `ACeepcted` is greater.
 | REWARD_RECEIPTS_STATUS | AVERAGE_SPEND |
 | ------- | ----------- |
 |FINISHED | 80.86 |
@@ -340,11 +340,10 @@ GROUP BY
 </details>
 
 ### V. Which brand has the most spend among users who were created within the past 6 months?
-To answer this question, I firstly create a cte to filter out users who created the account within past 6 months, then find receipts based on selected users, and calculate the spend based based on `final_price` from **Receipt_items**. Similar to question 1 and 2, there is no brand information from **Brands** for some items. And the top 1st item is actually yellow pepers, I choose the top 2nd item as the most spend brand: MILLER LITE
+To answer this question, I firstly create a cte to filter out users who created the account within past 6 months, then find receipts based on selected users, and calculate the spend based based on `final_price` from **receipt_items**. Similar to Q1 and Q2, we can only identify brand from `description`, which should be HUGGIES.
 | BRAND_NAME |DESCRIPTION | TOTAL_SPEND |
 | ------- | ----------- | ---------- |
-|NULL | Yellow Bell Peper | 21395 |
-|NULL | MILLER LITE 24 PACK 12OZ CAN | 6383 |
+|NULL | HUGGIES SIMPLY CLEAN PREMOISTENED WIPE FRAGRANCE FREE BAG 216 COUNT | 32340 |
 
 <details>
   <summary>SQL Codes</summary>
@@ -356,8 +355,7 @@ WITH selected_users AS (
     FROM
         users
     WHERE
-        DATE_TRUNC('month', created_date) >= (SELECT DATE_TRUNC('month', MAX(created_date) - INTERVAL '6 months') FROM users)
-        AND DATE_TRUNC('year', created_date) = (SELECT DATE_TRUNC('year', MAX(created_date))  FROM users)
+        created_date >= DATEADD(month, -6, (SELECT MAX(created_date) FROM users))
 ),
 
 -- 2. find receipts based on selected users
@@ -394,12 +392,12 @@ GROUP BY
 ORDER BY
     total_spend DESC
 LIMIT
-    5
+    1
 ```
 </details>
 
 ### VI. Which brand has the most transactions among users who were created within the past 6 months?
-Chose distinct `receipt_id` for each item and calculate the count. Similar to question 5, the top 1st item is banana, which has no brand. So we chose top 2nd: **Thindust** as the answer.
+Chose distinct `receipt_id` for each item and calculate the count. The top 1st item is banana, which has no brand according to `description`. So we chose top 2nd: **Thindust** as the answer.
 | BRAND_NAME |DESCRIPTION | TRANSACTION_COUNT |
 | ------- | ----------- | ---------- |
 |NULL | Yellow Bananas | 113 |
@@ -456,6 +454,303 @@ LIMIT
     5
 ```
 </details>
+
+## Task 3: Data Quality Evaluation
+In general, I conduct this evaluation by two steps: 1. Dive into each table first for missing values, duplicate rows, and outliers; 2. Check the integrity between tables.
+
+### users table: 495 rows
+- There are 48 missing rows for `sign_up_resource`, which turns out to be the same user information with 48 duplicated rows.
+- There are only 212 unique `user_id` with 70 user_id that have duplicated rows. The duplcaited percentage is 33%
+
+<details>
+  <summary>SQL Codes</summary>
+  
+```sql
+-- Users
+-- check missing values
+SELECT 
+    COUNT(*) AS total_rows,
+    COUNT(user_id) AS non_null_user_id,
+    COUNT(active) AS non_null_active,
+    COUNT(created_date) AS non_null_created_date,
+    COUNT(role) AS non_null_role,
+    COUNT(sign_up_source) AS non_sign_up_source,
+    COUNT(*) - COUNT(user_id) AS missing_user_id,
+    COUNT(*) - COUNT(active) AS missing_active,
+    COUNT(*) - COUNT(created_date) AS missing_created_date,
+    COUNT(*) - COUNT(role) AS missing_role,
+    COUNT(*) - COUNT(sign_up_source) AS missing_sign_up_source
+FROM users;
+
+select * from users
+-- check duplicate rows
+WITH duplicated_rows AS (
+SELECT
+    user_id,
+    created_date,
+    COUNT(*) AS cnt
+FROM 
+    users
+GROUP BY
+    user_id, created_date
+HAVING
+    COUNT(*) > 1   
+)
+
+SELECT
+    COUNT(DISTINCT d.user_id) AS num_duplicated_user_id,
+    COUNT(DISTINCT u.user_id) AS num_total_user_id,
+    COUNT(DISTINCT d.user_id)*1.0/
+    COUNT(DISTINCT u.user_id) AS duplicated_pct
+FROM
+    users u
+left join
+    duplicated_rows d
+on
+    u.user_id = d.user_id
+```
+</details>
+
+
+### brands table: 1167 rows
+- There are 7 brands that have different `brand_id` but share the same `barcode`: 511111504788, 511111305125, 511111504139, 511111204923, 511111605058, 511111004790, 511111704140.
+- Significant `category_code` (around 55.7%) is missing.
+
+<details>
+  <summary>SQL Codes</summary>
+  
+```sql
+-- Brands
+SELECT 
+    COUNT(*) AS total_rows,
+    COUNT(brand_id) AS non_null_brand_id,
+    COUNT(barcode) AS non_null_barcode,
+    COUNT(brand_code) AS non_null_brand_code,
+    COUNT(category) AS non_null_category,
+    COUNT(category_code) AS non_null_category_code,
+    COUNT(cpg_id) AS non_null_cpg_id,
+    COUNT(cpg_ref) AS non_null_cpg_ref,
+    COUNT(name) AS non_null_name,
+    COUNT(top_brand) AS non_null_top_brand,
+    
+    COUNT(*) - COUNT(brand_id) AS missing_brand_id,
+    COUNT(*) - COUNT(barcode) AS missing_barcode,
+    COUNT(*) - COUNT(brand_code) AS missing_brand_code,
+    COUNT(*) - COUNT(category) AS missing_category,
+    COUNT(*) - COUNT(category_code) AS missing_category_code,
+    COUNT(*) - COUNT(cpg_id) AS missing_cpg_id,
+    COUNT(*) - COUNT(cpg_ref) AS missing_cpg_ref,
+    COUNT(*) - COUNT(name) AS missing_name,
+    COUNT(*) - COUNT(top_brand) AS missing_top_brand
+FROM brands;
+
+-- notice significant category_code missing
+SELECT SUM(CASE WHEN category_code IS NULL THEN 1 ELSE 0 END)*1.0 / COUNT(*) AS pct FROM brands
+
+-- check duplicated rows by barcode
+WITH duplicated_rows AS (
+    SELECT
+        barcode,
+        COUNT(*) AS cnt
+    FROM 
+        brands
+    GROUP BY
+        barcode
+    HAVING COUNT(*) > 1   
+)
+
+SELECT * FROM brands WHERE barcode IN (511111504788, 511111305125, 511111504139, 511111204923, 511111605058, 511111004790, 511111704140)
+```
+</details>
+
+### recipts table: 1119 rows
+- It seems there is no obvious quality issue. Every `receipt_id` is unique.
+- Checked `NULL` in `purchased_item_count` and `total_spent`. They only appear when `rewards_receipt_status` in ('PENDING', 'REJECTED'), which is reasonable.
+- Checked extreme values for `purchased_item_count` and `total_spent` using 99 percentile value as thresholds. The extreme counts and spent align with each other, namely, no extreme spent with few counts or extreme counts with small amount of spent. Two of them who may have potential data quality issue are already flagged in `rewards_receipt_status`.
+
+<details>
+  <summary>SQL Codes</summary>
+  
+```sql
+-- Receipts
+-- check missing values
+SELECT
+    COUNT(*) AS total_rows,
+    COUNT(DISTINCT receipt_id) AS num_receipts,
+    SUM(CASE WHEN purchased_item_count IS NULL AND rewards_receipt_status NOT IN ('SUBMITTED', 'PENDING') THEN 1 ELSE 0 END) AS missing_count,
+    SUM(CASE WHEN rewards_receipt_status IS NULL THEN 1 ELSE 0 END) AS missing_status,
+    SUM(CASE WHEN total_spent IS NULL AND rewards_receipt_status NOT IN ('SUBMITTED', 'PENDING') THEN 1 ELSE 0 END) AS missing_total_spent
+FROM
+    receipts;
+
+-- check extreme values for item count 
+WITH threshold AS (
+    SELECT 
+    PERCENTILE_CONT(0.99) WITHIN GROUP (ORDER BY purchased_item_count) 
+        AS p99_purchased_item_count,
+    FROM receipts
+)
+
+SELECT
+    r.*
+FROM 
+    receipts r,
+    threshold t
+WHERE
+    r.purchased_item_count IS NOT NULL 
+    AND r.purchased_item_count > t.p99_purchased_item_count
+ORDER BY
+    r.purchased_item_count DESC
+
+-- check extreme values for total spent
+WITH threshold AS (
+    SELECT 
+    PERCENTILE_CONT(0.99) WITHIN GROUP (ORDER BY total_spent) 
+        AS p99_total_spent,
+    FROM receipts
+)
+
+SELECT
+    r.*
+FROM 
+    receipts r,
+    threshold t
+WHERE
+    r.total_spent IS NOT NULL 
+    AND r.total_spent > t.p99_total_spent
+ORDER BY
+    r.total_spent DESC
+```
+</details>
+
+### **users** -> **receipts**
+We need to check whether all users in **receipts** can be identified in the **users** table. It turns out there are 117 unique `user_id` that can not be identified in **users** table.
+
+<details>
+  <summary>SQL Codes</summary>
+  
+```sql
+SELECT
+    DISTINCT r.user_id
+FROM
+    receipts AS r
+LEFT JOIN
+    users AS u
+ON
+    r.user_id = u.user_id
+WHERE
+    u.user_id IS NULL
+```
+</details>
+
+
+
+### receipt_items: 6941 rows
+Since this is a child table extracted from **receipts**, there is no field description. 
+- 3851 items are missing barcodes, accounting for 55.48% of the total data.
+- 150 items have no information about `barcode`, `description`, `final_price`, `item_price`, and `quantity_purchased`, which needs to be reviewed.
+- Not clear about the difference between `final_price` and `item_price`.
+- `description` has inconsistencies in capitalization.
+In general, there are missing and unstructured information that needs to be handled. Also, since **receipt_item** are strongly correlated with **receipts** and **brands**, we need to develop advanced checks for quality issues.
+
+<details>
+  <summary>SQL Codes</summary>
+  
+```sql
+-- Receipt_items
+-- check barcode
+SELECT
+    COUNT(*)
+FROM
+    receipt_items
+WHERE
+    barcode IS NULL
+
+-- check both barcode and description
+SELECT
+    *
+FROM
+    receipt_items
+WHERE
+    barcode IS NULL
+    AND description IS NULL
+    AND final_price IS NULL
+    AND item_price IS NULL
+```
+</details>
+
+### receipts -> receipt_items
+Since one receipt may contain multiple receipt items, we need to make sure the `purchased_item_count` in **receipts** aligns with summation of `quantity_purchased`. The logic is similar to `total_spent` and `final_price`.
+- There are 57 receipts where the total amount spent does not match the sum of individual item costs.
+- There are 40 receipts where the total counts does not match the sum of indiviual item counts.
+
+<details>
+  <summary>SQL Codes</summary>
+  
+```sql
+-- receipts -> receipt_items
+-- check total spent
+WITH items_cost as (
+    SELECT
+        receipt_id,
+        SUM(final_price) AS all_spent
+    FROM
+        receipt_items
+    GROUP BY
+        receipt_id
+) 
+
+SELECT
+    r.receipt_id,
+    r.total_spent,
+    i.all_spent
+FROM
+    receipts r
+JOIN
+    items_cost i
+ON
+    r.receipt_id = i.receipt_id
+WHERE
+    r.total_spent != i.all_spent
+
+-- check total counts
+WITH items_count as (
+    SELECT
+        receipt_id,
+        SUM(quantity_purchased) AS total_counts
+    FROM
+        receipt_items
+    GROUP BY
+        receipt_id
+) 
+
+SELECT
+    r.receipt_id,
+    r.purchased_item_count,
+    i.total_counts
+FROM
+    receipts r
+JOIN
+    items_count i
+ON
+    r.receipt_id = i.receipt_id
+WHERE
+    r.purchased_item_count != i.total_counts
+```
+</details>
+
+### brands -> receipt_items
+In Task 2, we identified certain items without brand information. We need to compile a list of these items for future brand labeling.
+- There are 553 distinct barcodes, 3000 rows from **receipt_items** that can not be identified from `brands` table, which needs to contain more brand information to label the items in receipts.
+- In **brand** table, `barcode` only contains numeric values, whereas in **receipt_items** table, it includes string.
+- In **receipt_items** table, `barcode` like 4011 means 'ITEM NOT FOUND', which can change to `NULL`. `barcode` = 1234 has no description information, which should be furtherly investigated.
+
+## Task 4: Communicate with Stakeholders
+
+**Subject**: Data Quality Issues for Fetch Reward Datasets
+Dear [],
+
+Hope everything is well! I want to share an update on our recent review of our core datasets related to Fetch rewards.
 
 
 
