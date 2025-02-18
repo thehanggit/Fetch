@@ -782,7 +782,7 @@ ON
 
 Dear [product manager/business leader name],
 
-Hope everything is well! I’d like to share an update on the data quality review I recently completed for our Fetch Rewards datasets, including users, receipts, items in each receipt and brands tables. I conducted automated data validation checks to uncover potential issues missing values, duplicates, and referential inconsistences between datasets. Here are the key findings and my proposed next steps to address them:
+Hope everything is well! I'd like to share an update on the data quality review I recently completed for our Fetch Rewards datasets, including users, receipts, items in each receipt and brands tables. I conducted automated data validation checks to uncover potential issues missing values, duplicates, and referential inconsistences between datasets. Here are the key findings and my proposed next steps to address them:
 
 #### Key Findings
 
@@ -799,7 +799,7 @@ Hope everything is well! I’d like to share an update on the data quality revie
 3. Missing values and duplicates in user table
 
    - 10% of receipts cannot be matched to a known user, meaning some customers may not receive their rewards.
-   - The users table also contains 3% duplicate records, complicating user account management.
+   - The users table also contains 33% duplicate records, complicating user account management.
    - **Recommendation**: Investigate incomplete user data, remove or merge duplicates, and establish process to prevent future inconsistencies.
 
 4. Inconsistent barcodes in brand table
