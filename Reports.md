@@ -814,7 +814,9 @@ In general, we need to firstly address the data quality issues I proposed by rec
 Addressing these issues is critical for our rewards program to function smoothly and provide a positive experience for our customers. Please let me know if you have any questions or would like to discuss these recommendations further. I appreciate your support and look forward to working with you to enhance our data quality.
 
 Best
+
 Hang Gao
+
 Engineer Analytics
    
    
