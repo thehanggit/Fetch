@@ -790,7 +790,7 @@ Hope everything is well! I’d like to share an update on the data quality revie
    
    - More than half of the items in our receipts cannot be matched to entities in brands table.
    - Many items are labeled 'ITEM NOT FOUND' or contain in complete descriptions, and the brand information is contained in the description.
-   - These gaps make it harder to accurately track purchases. As a result, our system may fail to recongize these items and award corresponding points to customers, which could reduce their engagement and gave us negative feedbacks.
+   - These gaps make it harder to accurately track purchases. As a result, our system may fail to recongize these items and award corresponding points to customers, which could reduce their engagement and gave us negative feedback.
    - **Recommendation**: Prioritize expanding and updating the brands table to cover missing products by taking advantage of description from the item tables
 2. Inconsistent item counts and total spent
 
@@ -809,7 +809,7 @@ Hope everything is well! I’d like to share an update on the data quality revie
   
 #### Proposed Next Steps
 
-In general, we need to firstly address the data quality issues I proposed by recommendations, then set up automated alerts for missing values, duplicates, and referential inconsistencies. Then, schedule periodic audits to maintain data integrity as the datasets grows to a much bigger size.
+In general, we need to firstly address the data quality issues I proposed by recommendations, set up automated alerts for missing values, duplicates, and referential inconsistencies. Then, schedule periodic audits to maintain data integrity as the datasets grows to a much bigger size.
 
 Addressing these issues is critical for our rewards program to function smoothly and provide a positive experience for our customers. Please let me know if you have any questions or would like to discuss these recommendations further. I appreciate your support and look forward to working with you to enhance our data quality.
 
