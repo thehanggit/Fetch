@@ -782,7 +782,7 @@ ON
 
 Dear [product manager/business leader name],
 
-Hope everything is well! I’d like to share an update on the data quality review I recently completed for our Fetch Rewards datasets, including users, receipts, items in each receipt and brands tables. I conducted automated data validation checks to uncover potential issues missing values, duplicates, and referential inconsistences between datasets. Here are the key findings and my proposed next steps to address them:
+Hope everything is well! I'd like to share an update on the data quality review I recently completed for our Fetch Rewards datasets, including users, receipts, items in each receipt and brands tables. I conducted automated data validation checks to uncover potential issues missing values, duplicates, and referential inconsistences between datasets. Here are the key findings and my proposed next steps to address them:
 
 #### Key Findings
 
