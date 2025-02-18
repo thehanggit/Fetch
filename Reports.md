@@ -175,7 +175,7 @@ By exploration, there are 4 final tables that can be represented in an ERD shown
 - **receipts**: The primary key is `receipt_id`, which is renamed from `_id` for clafification. And there is foregin key `user_id` to link **Users** table.
 - **receipt_items**: There is no primary key. The foregin key `barcode` links to **brands** table and `receipt_id` links to **receipts** table.
 - **brands**: I choose `barcode` as primary key and `brand_id` as surrogate key.
-### Relatioships
+### Relationships
 - **users** -> **receipts**: one to many: One user can have many receipts and each receipt should belong to exactly one user.
 - **receipts** -> **receipt_item**: one to many: One receipt can contain many items and each receipt_item belongs to exactly one receipt.
 - **brands** -> **receipt_items**: One brand can appear in many items and each item belongs to one brand or may not have brand infomation after investigation.
@@ -563,7 +563,7 @@ SELECT * FROM brands WHERE barcode IN (511111504788, 511111305125, 511111504139,
 ```
 </details>
 
-### recipts table: 1119 rows
+### receipts table: 1119 rows
 - It seems there is no obvious quality issue. Every `receipt_id` is unique.
 - Checked `NULL` in `purchased_item_count` and `total_spent`. They only appear when `rewards_receipt_status` in ('PENDING', 'REJECTED'), which is reasonable.
 - Checked extreme values for `purchased_item_count` and `total_spent` using 99 percentile value as thresholds. The extreme counts and spent align with each other, namely, no extreme spent with few counts or extreme counts with small amount of spent. Two of them who may have potential data quality issue are already flagged in `rewards_receipt_status`.
@@ -651,6 +651,7 @@ Since this is a child table extracted from **receipts**, there is no field descr
 - 150 items have no information about `barcode`, `description`, `final_price`, `item_price`, and `quantity_purchased`, which needs to be reviewed.
 - Not clear about the difference between `final_price` and `item_price`.
 - `description` has inconsistencies in capitalization.
+  
 In general, there are missing and unstructured information that needs to be handled. Also, since **receipt_item** are strongly correlated with **receipts** and **brands**, we need to develop advanced checks for quality issues.
 
 <details>
@@ -743,14 +744,86 @@ WHERE
 In Task 2, we identified certain items without brand information. We need to compile a list of these items for future brand labeling.
 - There are 553 distinct barcodes, 3000 rows from **receipt_items** that can not be identified from `brands` table, which needs to contain more brand information to label the items in receipts.
 - In **brand** table, `barcode` only contains numeric values, whereas in **receipt_items** table, it includes string.
-- In **receipt_items** table, `barcode` like 4011 means 'ITEM NOT FOUND', which can change to `NULL`. `barcode` = 1234 has no description information, which should be furtherly investigated.
+- In **receipt_items** table, many items' `barcode` = 4011 means 'ITEM NOT FOUND', which should be labeled correctly. `barcode` = 1234 has no description information, which should be furtherly investigated.
+
+<details>
+<summary>SQL Codes</summary>
+  
+```sql
+-- brands -> receipt_items
+-- brand identification using barcode
+WITH barcode_item AS (
+    SELECT
+        DISTINCT r.barcode
+    FROM
+        receipt_items AS r
+    LEFT JOIN
+        brands AS b
+    ON
+        r.barcode = b.barcode
+    WHERE
+        b.barcode IS NULL
+)
+
+SELECT
+    r.*
+FROM
+    receipt_items r
+JOIN
+    barcode_item b
+ON
+    r.barcode = b.barcode
+```
+</details>
 
 ## Task 4: Communicate with Stakeholders
 
 **Subject**: Data Quality Issues for Fetch Reward Datasets
-Dear [],
 
-Hope everything is well! I want to share an update on our recent review of our core datasets related to Fetch rewards.
+Dear [product manager/business leader name],
+
+Hope everything is well! I’d like to share an update on the data quality review I recently completed for our Fetch Rewards datasets, including users, receipts, items in each receipt and brands tables. I conducted automated data validation checks to uncover potential issues missing values, duplicates, and referential inconsistences between datasets. Here are the key findings and my proposed next steps to address them:
+
+#### Key Findings
+
+1. Large portion of items mssing brand references and details
+   
+   - More than half of the items in our receipts cannot be matched to entities in brands table.
+   - Many items are labeled 'ITEM NOT FOUND' or contain in complete descriptions, and the brand information is contained in the description.
+   - These gaps make it harder to accurately track purchases. As a result, our system may fail to recongize these items and award corresponding points to customers, which could reduce their engagement and gave us negative feedbacks.
+   - **Recommendation**: Prioritize expanding and updating the brands table to cover missing products by taking advantage of description from the item tables
+2. Inconsistent item counts and total spent
+
+   - Around 4.5% of receipts have recorded inconsistent item counts and total money spent. While not severe, these discrepancies can affect point calculations.
+   - **Recommendation**: The engineering team should regularly review and fix these inconsistencies to ensure accurate reward allocations.
+3. Missing values and duplicates in user table
+
+   - 10% of receipts cannot be matched to a known user, meaning some customers may not receive their rewards.
+   - The users table also contains 3% duplicate records, complicating user account management.
+   - **Recommendation**: Investigate incomplete user data, remove or merge duplicates, and establish process to prevent future inconsistencies.
+
+4. Inconsistent barcodes in brand table
+
+   - Discovered different brands sharing the same barcode, causing confusion and misattribution when awarding brand-specific points.
+   - **Recommendation**: Eliminate duplicate barcodes by consolidating brand entries and enforcing a unique barcode constraint.
+  
+#### Proposed Next Steps
+
+In general, we need to firstly address the data quality issues I proposed by recommendations, then set up automated alerts for missing values, duplicates, and referential inconsistencies. Then, schedule periodic audits to maintain data integrity as the datasets grows to a much bigger size.
+
+Addressing these issues is critical for our rewards program to function smoothly and provide a positive experience for our customers. Please let me know if you have any questions or would like to discuss these recommendations further. I appreciate your support and look forward to working with you to enhance our data quality.
+
+Best
+Hang Gao
+Engineer Analytics
+   
+   
+
+   
+    
+
+   
+
 
 
 
