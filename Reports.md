@@ -799,7 +799,7 @@ Hope everything is well! I’d like to share an update on the data quality revie
 3. Missing values and duplicates in user table
 
    - 10% of receipts cannot be matched to a known user, meaning some customers may not receive their rewards.
-   - The users table also contains 3% duplicate records, complicating user account management.
+   - The users table also contains 33% duplicate records, complicating user account management.
    - **Recommendation**: Investigate incomplete user data, remove or merge duplicates, and establish process to prevent future inconsistencies.
 
 4. Inconsistent barcodes in brand table
