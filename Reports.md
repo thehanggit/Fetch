@@ -293,8 +293,8 @@ SELECT * from base_previous_month
 ```
 </details>
 
-### III. When considering total number of items purchased from receipts with 'rewardsReceiptStatus’ of ‘Accepted’ or ‘Rejected’, which is greater?
-To answer this question, I averaged `total_spent` from **receipts** based on `FINISHED` and `REJECTED` groups. Apparently, `ACeepcted` is greater.
+### III. When considering average spend from receipts with 'rewardsReceiptStatus’ of ‘Accepted’ or ‘Rejected’, which is greater?
+To answer this question, I averaged `total_spent` from **receipts** based on `FINISHED` and `REJECTED` groups. Apparently, `Accepted` is greater.
 | REWARD_RECEIPTS_STATUS | AVERAGE_SPEND |
 | ------- | ----------- |
 |FINISHED | 80.86 |
@@ -317,7 +317,7 @@ GROUP BY
 </details>
 
 ### IV. When considering total number of items purchased from receipts with 'rewardsReceiptStatus’ of ‘Accepted’ or ‘Rejected’, which is greater? 
-To answer this question, I calculated the sum of `purchased_item_count` from **Receipts** based on `FINISHED` and `REJECTED` groups. Apparently, `ACeepcted` is greater.
+To answer this question, I calculated the sum of `purchased_item_count` from **Receipts** based on `FINISHED` and `REJECTED` groups. Apparently, `Accepted` is greater.
 | REWARD_RECEIPTS_STATUS | TOTAL_NUM_PURCHASED_ITEMS |
 | ------- | ----------- |
 |FINISHED | 8184 |
